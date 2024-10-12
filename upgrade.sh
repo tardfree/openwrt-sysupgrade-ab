@@ -86,6 +86,7 @@ if [ -z "${ROOTA_DEV}" ]; then
         ROOTB_DEV=${ROOTB_DEV}$(( ${ROOTA_PART_NUM} + 1 ))
         echo "WARNING: rootfs_a found with OpenWRT name on ${ROOTA_DEV} (this is normal for first use)"
         echo "Assuming rootfs_b should be placed on ${ROOTB_DEV}. Proceed with caution."
+        MIGRATION=yes
     #elif [ ! -z "${ROOTA_DEV}" ] && [ ! -z "${ROOTB_DEV}" ]; then
         # this would be when we're running from B and this will be the first time recreating
         # A. So this is ok for the second use of this upgrade on a system.
@@ -185,6 +186,11 @@ a_partid=$(echo $ROOT_DEV | egrep -o '[0-9]+')
 
 echo "Copying kernel..."
 cp $KERNEL /boot/vmlinuz-$partid || exit 1
+
+if [ "${MIGRATION}" == "yes" ] && [ ! -f "/boot/vmlinuz-${a_partid}" ] && [ -f "/boot/vmlinuz" ] ; then
+    # Migrate from openwrt named kernel to rootfs_a kernel
+    mv /boot/vmlinuz /boot/vmlinuz-${a_partid} || exit 1
+fi
 
 cat <<EOF > /boot/grub/grub.cfg
 serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1 --rtscts=off
