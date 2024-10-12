@@ -145,10 +145,10 @@ echo "Generating grub.cfg..."
 cp /boot/grub/grub.cfg /boot/grub/grub.cfg.bak
 
 release=$(grep OPENWRT_RELEASE /mnt/sysupgrade/etc/os-release | cut -d'"' -f2)
-partuuid=$(blkid -o export $TARGET_DEV | grep PARTUUID | cut -d'=' -f2)
+partuuid=$(blkid -s PARTUUID -o value $TARGET_DEV)
 partid=$(echo $TARGET_DEV | egrep -o '[0-9]+')
 a_release=$(grep OPENWRT_RELEASE /etc/os-release | cut -d'"' -f2)
-a_partuuid=$(blkid -o export $ROOT_DEV | grep PARTUUID | cut -d'=' -f2)
+a_partuuid=$(blkid -s PARTUUID -o value $ROOT_DEV)
 a_partid=$(echo $ROOT_DEV | egrep -o '[0-9]+')
 
 echo "Copying kernel..."
