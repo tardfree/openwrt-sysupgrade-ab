@@ -180,9 +180,11 @@ cp /boot/grub/grub.cfg /boot/grub/grub.cfg.bak
 release=$(grep OPENWRT_RELEASE /mnt/sysupgrade/etc/os-release | cut -d'"' -f2)
 partuuid=$(blkid -s PARTUUID -o value $TARGET_DEV)
 partid=$(echo $TARGET_DEV | egrep -o '[0-9]+')
+partdev=$TARGET_DEV
 a_release=$(grep OPENWRT_RELEASE /etc/os-release | cut -d'"' -f2)
 a_partuuid=$(blkid -s PARTUUID -o value $ROOT_DEV)
 a_partid=$(echo $ROOT_DEV | egrep -o '[0-9]+')
+a_partdev=$ROOT_DEV
 
 echo "Copying kernel..."
 cp $KERNEL /boot/vmlinuz-$partid || exit 1
@@ -201,18 +203,17 @@ set timeout="5"
 search -l kernel -s root
 
 menuentry "$release $partid" {
-	linux /boot/vmlinuz-$partid root=PARTUUID=$partuuid rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
+	linux /boot/vmlinuz-$partid root=$partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
 }
 menuentry "$release $partid (failsafe)" {
-	linux /boot/vmlinuz-$partid failsafe=true root=PARTUUID=$partuuid rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
+	linux /boot/vmlinuz-$partid failsafe=true root=$partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
 }
 menuentry "$a_release $a_partid" {
-	linux /boot/vmlinuz-$a_partid root=PARTUUID=$a_partuuid rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
+	linux /boot/vmlinuz-$a_partid root=$a_partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
 }
 menuentry "$a_release $a_partid (failsafe)" {
-	linux /boot/vmlinuz-$a_partid failsafe=true root=PARTUUID=$a_partuuid rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
+	linux /boot/vmlinuz-$a_partid failsafe=true root=$a_partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
 }
 EOF
-
 
 umount /mnt/sysupgrade
