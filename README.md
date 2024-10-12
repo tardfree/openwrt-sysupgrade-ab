@@ -22,8 +22,8 @@ system was deployed from the combined-ext4 image the setup is largely handled
 automatically and only needs you to create the new root partition.
 
 Both root images have their kernels on the same boot partition. They are named
-with the partition number as a suffix. The layout above would have
-`/boot/vmlinuz-2` and `/boot/vmlinuz-3` for the two rootfs's kernels.
+with the A/B label as a suffix. The layout above would have
+`/boot/vmlinuz-A` and `/boot/vmlinuz-B` for the two rootfs's kernels.
 
 ### High Level Process
 1. Detect all required partitions

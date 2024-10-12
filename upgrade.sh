@@ -5,6 +5,10 @@ BOOT_DEV=""
 ROOTA_DEV=""
 ROOTB_DEV=""
 
+# Default image name strings (no spaces please)
+LABEL_IMAGEA="A"
+LABEL_IMAGEB="B"
+
 # Arguments
 if [ $# -eq 0 ]; then
     echo "Usage: $0 kernel rootfs"
@@ -122,11 +126,15 @@ rootTwoIdByBlock=$(stat -c "%02t%02T" $ROOTB_DEV)
 if [ $rootIdByDev = $rootOneIdByBlock ]; then
     ROOT_DEV=$ROOTA_DEV
     TARGET_DEV=$ROOTB_DEV
-    LABEL="rootfs_b"
+    TARGET_FS_LABEL="rootfs_b"
+    ROOT_LABEL=${LABEL_IMAGEA}
+    TARGET_LABEL=${LABEL_IMAGEB}
 elif [ $rootIdByDev = $rootTwoIdByBlock ]; then
     ROOT_DEV=$ROOTB_DEV
     TARGET_DEV=$ROOTA_DEV
-    LABEL="rootfs_a"
+    TARGET_FS_LABEL="rootfs_a"
+    ROOT_LABEL=${LABEL_IMAGEB}
+    TARGET_LABEL=${LABEL_IMAGEA}
 else
     echo "rootfs is not mounted on $ROOTA_DEV or $ROOTB_DEV! Abort!"
     exit 1
@@ -162,7 +170,7 @@ fi
 
 
 echo "Formatting $TARGET_DEV..."
-mkfs.ext4 -L $LABEL -b 4096 -m 0 $TARGET_DEV
+mkfs.ext4 -L ${TARGET_FS_LABEL} -b 4096 -m 0 ${TARGET_DEV}
 
 echo "Mounting $TARGET_DEV to /mnt/sysupgrade..."
 mkdir /mnt/sysupgrade
@@ -178,16 +186,17 @@ echo "Generating grub.cfg..."
 cp /boot/grub/grub.cfg /boot/grub/grub.cfg.bak
 
 release=$(grep OPENWRT_RELEASE /mnt/sysupgrade/etc/os-release | cut -d'"' -f2)
-partuuid=$(blkid -s PARTUUID -o value $TARGET_DEV)
-partid=$(echo $TARGET_DEV | egrep -o '[0-9]+')
+#partuuid=$(blkid -s PARTUUID -o value $TARGET_DEV)
+partid=${TARGET_LABEL} #$(echo $TARGET_DEV | egrep -o '[0-9]+')
 partdev=$TARGET_DEV
 a_release=$(grep OPENWRT_RELEASE /etc/os-release | cut -d'"' -f2)
-a_partuuid=$(blkid -s PARTUUID -o value $ROOT_DEV)
-a_partid=$(echo $ROOT_DEV | egrep -o '[0-9]+')
+#a_partuuid=$(blkid -s PARTUUID -o value $ROOT_DEV)
+a_partid=${ROOT_LABEL} #$(echo $ROOT_DEV | egrep -o '[0-9]+')
 a_partdev=$ROOT_DEV
 
 echo "Copying kernel..."
 cp $KERNEL /boot/vmlinuz-$partid || exit 1
+touch /mnt/sysupgrade/.image-${partid}
 
 if [ "${MIGRATION}" == "yes" ] && [ ! -f "/boot/vmlinuz-${a_partid}" ] && [ -f "/boot/vmlinuz" ] ; then
     # Migrate from openwrt named kernel to rootfs_a kernel
