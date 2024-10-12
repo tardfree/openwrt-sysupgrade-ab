@@ -1,8 +1,9 @@
 #!/bin/sh
 
-BOOT_DEV="/dev/sda1"
-ROOTA_DEV="/dev/sda2"
-ROOTB_DEV="/dev/sda3"
+# Override here if auto detect doesn't work
+BOOT_DEV=""
+ROOTA_DEV=""
+ROOTB_DEV=""
 
 # Arguments
 if [ $# -eq 0 ]; then
@@ -64,6 +65,37 @@ if [ -d /mnt/sysupgrade ]; then
     exit 1
 fi
 
+# Detect the partitions in use by filesystem labels (not partition labels)
+if [ -z "${BOOT_DEV}" ]; then
+    BOOT_DEV=$(blkid -t LABEL=kernel -o device) # openwrt full disk image uses this name
+fi
+if [ -z "${ROOTA_DEV}" ]; then
+    ROOTA_DEV=$(blkid -t LABEL=rootfs_a -o device) #the name we use
+fi
+if [ -z "${ROOTB_DEV}" ]; then
+    ROOTB_DEV=$(blkid -t LABEL=rootfs_b -o device)
+fi
+# That should find everything with the names we use, if we're still blank, try the openwrt
+# default for rootfs_a, increment by 1 for rootfs_b and alert the user.
+if [ -z "${ROOTA_DEV}" ]; then
+    ROOTA_DEV=$(blkid -t LABEL=rootfs -o device) # openwrt full disk image uses this name
+    if [ ! -z "${ROOTA_DEV}" ] && [ -z "${ROOTB_DEV}" ]; then
+        # that worked, lets increment for B (for simplicity we assume single digit partition numbers)
+        ROOTB_DEV=${ROOTA_DEV%?} # remove the last character
+        ROOTA_PART_NUM=${ROOTA_DEV#"${ROOTB_DEV}"} # ROOTA_DEV with the first bit removed
+        ROOTB_DEV=${ROOTB_DEV}$(( ${ROOTA_PART_NUM} + 1 ))
+        echo "WARNING: rootfs_a found with OpenWRT name on ${ROOTA_DEV} (this is normal for first use)"
+        echo "Assuming rootfs_b should be placed on ${ROOTB_DEV}. Proceed with caution."
+    #elif [ ! -z "${ROOTA_DEV}" ] && [ ! -z "${ROOTB_DEV}" ]; then
+        # this would be when we're running from B and this will be the first time recreating
+        # A. So this is ok for the second use of this upgrade on a system.
+    fi
+fi
+
+if [ -z "${BOOT_DEV}" ] || [ -z "${ROOTA_DEV}" ] || [ -z "${ROOTB_DEV}" ]; then
+    echo "unable to autodetect all three partitions. Update this script's variables or label the filesystems."
+    exit 1
+fi
 
 # Check if specified boot volume exists and is mounted on /boot
 if [ -b $BOOT_DEV ]; then
