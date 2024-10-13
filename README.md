@@ -8,9 +8,16 @@ executing an upgrade the new image will be written to the non-active root
 partition. The grub config is updated to allow booting into either image.
 
 At boot, you'll be able to select between either image. The most recently
-installed/upgraded image will be the default.
-* OpenWrt SNAPSHOT r15199-5d2b577a53
-* OpenWrt SNAPSHOT r15129-d346beb08c
+installed/upgraded image will be the default (highlighted and first in the
+list). Both root options also have the default failsafe options, and the
+partition label. Example grub screen:
+
+```
+*OpenWrt 23.05.5 r24106-10cc5fcd00 B
+ OpenWrt 23.05.5 r24106-10cc5fcd00 B (failsafe)
+ OpenWrt 23.05.2 r23630-842932a63d A
+ OpenWrt 23.05.2 r23630-842932a63d A (failsafe)
+```
 
 ### Partition Layout
 * /dev/sda1 = /boot with label kernel
@@ -19,7 +26,8 @@ installed/upgraded image will be the default.
 
 Filesystem labels are used to auto-detect partitions for the upgrade. If the
 system was deployed from the combined-ext4 image the setup is largely handled
-automatically and only needs you to create the new root partition.
+automatically and only needs you to create the new root partition. This is
+tested with both sata/msata and nvme devices.
 
 Both root images have their kernels on the same boot partition. They are named
 with the A/B label as a suffix. The layout above would have
@@ -40,9 +48,14 @@ with the A/B label as a suffix. The layout above would have
 
 ## Setup for GPT partition layout
 1. Install Packages: `opkg install parted coreutils-stat blkid e2fsprogs`
-2. If required, resize the initial root partition (2)
+2. If required, resize the initial root partition (2) (naming it is shown here but
+   optional)
    ```
    root@OpenWrt:~# parted --fix --script /dev/sda resizepart 2 1041MiB name 2 root_a
+   Warning: Not all of the sapce available to /dev/sda appears to be used, you can fix
+   the GPT to use all of the space (an extra 8142303 blocks) or continue with the current
+   setting?
+   Fixing, due to --fix
    root@OpenWrt:~# parted /dev/sda unit MiB print
     Model: ATA VBOX HARDDISK (scsi)
     Disk /dev/sda: 4096MiB
@@ -57,7 +70,7 @@ with the A/B label as a suffix. The layout above would have
    ```
 2. Create partiton for second rootfs (3)
    ```
-   root@OpenWrt:~# parted /dev/sda mkpart root_b ext4 1041MiB 2064MiB name 3 root_b
+   root@OpenWrt:~# parted /dev/sda mkpart root_b ext4 1041MiB 2064MiB
    root@OpenWrt:~# parted /dev/sda unit MiB print
    Model: ATA VBOX HARDDISK (scsi)
    Disk /dev/sda: 4096MiB
@@ -207,3 +220,18 @@ root@OpenWrt:~#
   in `/lib/upgrade/common.sh`. Switching to device names follows a different
   codepath avoiding the issue entirely.
   [Related issue here](https://github.com/openwrt/openwrt/issues/6206).
+
+* Q: When it's running how can I easily tell which partition is currently
+  root?
+
+  A: Since both root's show up as `/dev/root` mounted on `/` this isn't
+  obvious. There are a few ways (and many more):
+  ```
+  root@OpenWrt:/# cat /proc/cmdline
+  BOOT_IMAGE=/boot/vmlinuz-B root=/dev/sda3 ...
+  root@OpenWrt:/# ls /.i*
+  /.image-B
+  ```
+  The first is simply checking the running kernel command line, or check
+  for a `.image-*` file in the root. This script creates that, so until
+  you boot a root this script has written, it wouldn't be present.
