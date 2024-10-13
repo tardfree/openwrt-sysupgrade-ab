@@ -170,7 +170,7 @@ fi
 
 
 echo "Formatting $TARGET_DEV..."
-mkfs.ext4 -L ${TARGET_FS_LABEL} -b 4096 -m 0 ${TARGET_DEV}
+mkfs.ext4 -q -L ${TARGET_FS_LABEL} -b 4096 -m 0 ${TARGET_DEV}
 
 echo "Mounting $TARGET_DEV to /mnt/sysupgrade..."
 mkdir /mnt/sysupgrade

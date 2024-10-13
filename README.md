@@ -145,17 +145,6 @@ Rootfs: openwrt-23.05.5-x86-64-generic-rootfs.tar.gz
 Continue? (y/n) y
 upgrade: Saving config files...
 Formatting /dev/sda3...
-mke2fs 1.47.0 (5-Feb-2023)
-Creating filesystem with 261888 4k blocks and 65536 inodes
-Filesystem UID: 76eca9aa-5959-45fb-adca-78a5b5e66f69
-Superblock backups stored on blocks:
-        32768, 98304, 163840, 229376
-
-Allocating group tables: done
-Writing inode tables: done
-Creating journal (4096 blocks): done
-Writing superblocks and filesystem accounting information: done
-
 Mounting /dev/sda3 to /mmt/sysupgrade...
 Extracting rootfs.
 Restoring backup...
@@ -175,20 +164,9 @@ Rootfs: openwrt-23.05.5-x86-64-generic-rootfs.tar.gz
 Continue? (y/n) y
 upgrade: Saving config files...
 Formatting /dev/sda2...
-mke2fs 1.47.0 (5-Feb-2023)
 /dev/sda2 contains a ext4 file system labelled 'rootfs'
 last mounted on / on Sat Oct 12 11:26:16 2024
 Proceed anyway? (y,N) y
-Creating filesystem with 262144 4k blocks and 65664 inodes
-Filesystem UID: 439f55ff-af93-4a69-a5d9-27952b640184
-Superblock backups stored on blocks:
-        32768, 98304, 163840, 229376
-
-Allocating group tables: done
-Writing inode tables: done
-Creating journal (8192 blocks): done
-Writing superblocks and filesystem accounting information: done
-
 Mounting /dev/sda2 to /mmt/sysupgrade...
 Extracting rootfs.
 Restoring backup
